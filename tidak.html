@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komentar Anonymous</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .comment-form button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .comment-form button:hover {
+            background-color: #45a049;
+        }
+
+        .comments {
+            margin-top: 30px;
+        }
+
+        .comment {
+            background-color: #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        .comment p {
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .comment-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="comment-form">
+            <textarea id="commentInput" placeholder="Tulis komentar Anda..."></textarea>
+            <button onclick="submitComment()">Kirim Komentar</button>
+        </div>
+        
+        <div class="comments" id="commentsContainer">
+            <!-- Komentar akan ditampilkan di sini -->
+        </div>
+    </div>
+
+    <script>
+        // Load komentar saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', loadComments);
+
+        // Fungsi untuk menyimpan komentar ke localStorage
+        function submitComment() {
+            const commentText = document.getElementById('commentInput').value.trim();
+            
+            if (!commentText) {
+                alert('Silahkan tulis komentar terlebih dahulu!');
+                return;
+            }
+
+            const comment = {
+                text: commentText,
+                timestamp: new Date().toISOString()
+            };
+
+            // Ambil komentar yang sudah ada dari localStorage
+            let comments = JSON.parse(localStorage.getItem('comments') || '[]');
+            comments.push(comment);
+            
+            // Simpan ke localStorage
+            localStorage.setItem('comments', JSON.stringify(comments));
+            
+            // Bersihkan input
+            document.getElementById('commentInput').value = '';
+            
+            // Muat ulang komentar
+            loadComments();
+        }
+
+        // Fungsi untuk menampilkan komentar
+        function loadComments() {
+            const commentsContainer = document.getElementById('commentsContainer');
+            commentsContainer.innerHTML = '';
+            
+            const comments = JSON.parse(localStorage.getItem('comments') || '[]');
+            
+            comments.reverse().forEach(comment => {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                
+                const date = new Date(comment.timestamp).toLocaleString();
+                
+                commentDiv.innerHTML = `
+                    <div class="comment-info">
+                        Anonymous - ${date}
+                    </div>
+                    <p>${comment.text}</p>
+                `;
+                
+                commentsContainer.appendChild(commentDiv);
+            });
+        }
+    </script>
+</body>
+</html>
