@@ -347,21 +347,43 @@
       modalCommentText.value = '';
     }
 
-    // Proses submit komentar dari modal
-    submitModalComment.addEventListener('click', function() {
-      const text = modalCommentText.value.trim();
-      if (text === '') {
-        alert('Komentar tidak boleh kosong.');
-        return;
-      }
-      const dari = modalDari.value;
-      const untuk = modalUntuk.value;
-      const dateTime = getCurrentDateTime();
-      const commentElement = createCommentElement(dari, untuk, text, dateTime);
-      commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
-      commentModal.style.display = 'none';
-      clearModalForm();
-    });
+    <script>
+      
+  // Proses submit komentar dari modal (modifikasi untuk menyimpan data ke Firebase)
+  submitModalComment.addEventListener('click', function() {
+    const text = modalCommentText.value.trim();
+    if (text === '') {
+      alert('Komentar tidak boleh kosong.');
+      return;
+    }
+    const dari = modalDari.value;
+    const untuk = modalUntuk.value;
+    const dateTime = getCurrentDateTime();
+
+    // Buat objek komentar
+    const komentar = {
+      dari: dari.trim() !== '' ? dari.trim() : 'Anonymous',
+      untuk: untuk.trim() !== '' ? untuk.trim() : 'Umum',
+      text: text,
+      dateTime: dateTime,
+      love: 0
+    };
+
+    // Simpan ke Firebase Realtime Database di bawah node "comments"
+    // Firebase akan menghasilkan key unik untuk tiap komentar
+    const newCommentKey = firebase.database().ref().child('comments').push().key;
+    firebase.database().ref('comments/' + newCommentKey).set(komentar)
+      .then(() => {
+        // Jika simpan berhasil, tampilkan komentar di halaman
+        const commentElement = createCommentElement(dari, untuk, text, dateTime);
+        commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
+        commentModal.style.display = 'none';
+        clearModalForm();
+      })
+      .catch((error) => {
+        console.error("Error menyimpan komentar: ", error);
+      });
+  });
   </script>
 
   <!-- Tambahkan Firebase SDK -->
