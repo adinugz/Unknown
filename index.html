@@ -386,6 +386,18 @@
   });
   </script>
 
+  <script>
+  // Saat halaman dimuat, ambil semua komentar dari Firebase
+  firebase.database().ref('comments').on('value', function(snapshot) {
+    commentsContainer.innerHTML = ''; // Bersihkan container
+    snapshot.forEach(function(childSnapshot) {
+      const komentar = childSnapshot.val();
+      const commentElement = createCommentElement(komentar.dari, komentar.untuk, komentar.text, komentar.dateTime);
+      commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
+    });
+  });
+</script>
+
   <!-- Tambahkan Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
