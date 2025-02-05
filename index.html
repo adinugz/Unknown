@@ -22,23 +22,47 @@
       color: #333;
       background-color: #f5f7fa;
       padding: 2rem;
+      /* Beri ruang di atas agar tidak tertutup oleh header */
+      padding-top: 80px;
     }
-    h1 {
+    /* Fixed Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      z-index: 1100;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      color: #1a365d;
+    }
+    header button {
+      background-color: transparent;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #4299e1;
+    }
+    /* Deskripsi di bawah header */
+    .description {
       text-align: center;
       color: #1a365d;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-    }
-    p {
-      text-align: center;
-      color: #1a365d;
-      margin-bottom: 0.5rem;
+      margin-top: 70px; /* agar tidak tertutup header */
+      margin-bottom: 1rem;
       font-weight: 300;
     }
-    /* Tombol untuk membuka modal komentar utama */
+    /* Tombol utama untuk membuka modal komentar */
     #openModalBtn {
       display: block;
-      margin: 0 auto 2rem;
+      margin: 1rem auto 2rem;
       padding: 0.75rem 2rem;
       background-color: #4299e1;
       color: white;
@@ -52,7 +76,7 @@
     #openModalBtn:hover {
       background-color: #3182ce;
     }
-    /* Modal Popup */
+    /* Modal Popup untuk komentar utama */
     .modal {
       display: none;
       position: fixed;
@@ -191,7 +215,7 @@
     }
     .replies {
       margin-top: 1rem;
-      /* Tampilan default untuk container reply akan ditentukan oleh status global */
+      display: none; /* default disembunyikan */
     }
     @media (max-width: 640px) {
       body {
@@ -204,14 +228,49 @@
         margin-left: 1rem;
       }
     }
+    /* Modal untuk Pesan (tombol di pojok kanan atas) */
+    .message-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background-color: #fff;
+      box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+      z-index: 1200;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .message-modal h2 {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      color: #1a365d;
+    }
+    .message-modal .close-message-modal {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #4299e1;
+    }
   </style>
 </head>
 <body>
-  <h1>KELUH KESAH</h1>
-  <p>Berkeluh kesah dan berpesan secara anonim untuk seseorang, 
-          <a href="https://www.instagram.com/adinugz">adinugz</a>
-          atau siapapun 
-        </p>
+  <!-- Fixed Header -->
+  <header>
+    <h1>KELUH KESAH</h1>
+    <button id="openMessageBtn">Tentang</button>
+  </header>
+
+  <!-- Deskripsi (opsional) -->
+  <p class="description">
+    Berkeluh kesah dan berpesan secara anonim untuk diri sendiri, 
+    <a href="https://www.instagram.com/adinugz" target="_blank">adinugz</a>, atau siapapun.
+  </p>
+
+  <!-- Tombol untuk membuka modal komentar utama -->
   <button id="openModalBtn">Ketik Pesan..</button>
 
   <!-- Modal Popup untuk Komentar Utama -->
@@ -223,6 +282,14 @@
       <textarea id="modalCommentText" rows="3" placeholder="Tulis Pesan Kamu..."></textarea>
       <button id="submitModalComment">Kirim Komentar</button>
     </div>
+  </div>
+
+  <!-- Modal untuk Pesan (Placeholder untuk halaman pesan) -->
+  <div id="messageModal" class="message-modal">
+    <span class="close-message-modal">&times;</span>
+    <h2>@adinugz</h2>
+    <!-- Di sini Anda bisa menambahkan konten pesan yang diinginkan -->
+    <p>Tempat bagi siapa saja untuk mencurahkan isi hati dan berbagi pengalaman. Dibuat karena fomo AI dengan tujuan untuk mengurangi angka stress para gen z karena tekanannya yang dibuat sendiri..</p>
   </div>
 
   <!-- Container untuk menampilkan komentar dan reply -->
@@ -287,7 +354,6 @@
 
       loveBtn.addEventListener('click', () => {
         const currentKey = commentDiv.getAttribute('data-key');
-        // Cek apakah user sudah memberikan love untuk komentar ini
         if (localStorage.getItem('loved_' + currentKey)) {
           alert("ojo mbok like maneh ta cok!!");
           return;
@@ -324,11 +390,9 @@
       // Container untuk reply
       const repliesContainer = document.createElement('div');
       repliesContainer.className = 'replies';
-      // Untuk komentar utama, periksa status open dari reply (jika ada di replyOpenState)
       if (!isReply) {
         repliesContainer.style.display = replyOpenState[commentKey] ? 'block' : 'none';
       } else {
-        // Reply selalu tampil (tidak ada toggle)
         repliesContainer.style.display = 'block';
       }
       commentDiv.appendChild(repliesContainer);
@@ -354,7 +418,6 @@
       if (repliesContainer.style.display === 'none' || repliesContainer.style.display === '') {
         repliesContainer.style.display = 'block';
         replyOpenState[parentKey] = true;
-        // Jika belum ada form reply, tambahkan form reply di bawah container reply
         if (!parentDiv.querySelector('.reply-form')) {
           const replyForm = document.createElement('div');
           replyForm.className = 'reply-form';
@@ -387,13 +450,12 @@
             };
             database.ref(`comments/${parentKey}/replies`).push(replyData)
               .then(() => {
-                // Setelah berhasil, clear form (tetap biarkan container reply tetap terbuka)
+                // Clear form reply, tetap biarkan container reply terbuka
                 replyInitialsInput.value = '';
                 replyTextarea.value = '';
               })
               .catch(console.error);
           });
-          // Tambahkan form reply di bawah container reply (tetap dalam parentDiv)
           parentDiv.appendChild(replyForm);
         }
       } else {
@@ -439,6 +501,14 @@
           document.getElementById('modalCommentText').value = '';
         })
         .catch(console.error);
+    });
+
+    /***** Modal Pesan (Placeholder) *****/
+    document.getElementById('openMessageBtn').addEventListener('click', () => {
+      document.getElementById('messageModal').style.display = 'block';
+    });
+    document.querySelector('.close-message-modal').addEventListener('click', () => {
+      document.getElementById('messageModal').style.display = 'none';
     });
 
     /***** Realtime Listener untuk Menampilkan Komentar *****/
