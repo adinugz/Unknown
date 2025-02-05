@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistem Komentar dengan Popup, Firebase, Reply (dengan Inisial) & Komentar Terbaru di Atas</title>
+  <title>Sistem Komentar dengan Popup, Firebase, & Reply Tersembunyi</title>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* Reset & Umum */
     * {
       margin: 0;
       padding: 0;
@@ -28,6 +29,7 @@
       margin-bottom: 2rem;
       font-weight: 600;
     }
+    /* Tombol Buka Modal */
     #openModalBtn {
       display: block;
       margin: 0 auto 2rem;
@@ -44,6 +46,7 @@
     #openModalBtn:hover {
       background-color: #3182ce;
     }
+    /* Modal Popup */
     .modal {
       display: none;
       position: fixed;
@@ -99,6 +102,7 @@
     #submitModalComment:hover {
       background-color: #3182ce;
     }
+    /* Container Komentar */
     #commentsContainer {
       max-width: 800px;
       margin: 0 auto;
@@ -123,8 +127,9 @@
       color: #2d3748;
       margin-bottom: 1rem;
     }
+    /* Tombol Love & Toggle Reply */
     .love-btn,
-    .reply-btn {
+    .toggle-reply-btn {
       background-color: transparent;
       border: 1px solid #e2e8f0;
       padding: 0.5rem 1rem;
@@ -138,9 +143,10 @@
       background-color: #fed7d7;
       border-color: #fc8181;
     }
-    .reply-btn:hover {
+    .toggle-reply-btn:hover {
       background-color: #e2e8f0;
     }
+    /* Reply Form & Replies Container */
     .reply-form {
       margin-top: 1rem;
       padding: 1rem;
@@ -179,6 +185,7 @@
     }
     .replies {
       margin-top: 1rem;
+      display: none;
     }
     @media (max-width: 640px) {
       body {
@@ -187,14 +194,14 @@
       .comment {
         padding: 1rem;
       }
-      .reply {
+      .comment.reply {
         margin-left: 1rem;
       }
     }
   </style>
 </head>
 <body>
-  <h2>Sistem Komentar dengan Popup, Firebase, Reply (dengan Inisial) & Komentar Terbaru di Atas</h2>
+  <h2>Sistem Komentar dengan Popup, Firebase, Reply Tersembunyi, & Inisial</h2>
   <button id="openModalBtn">Tulis</button>
 
   <!-- Modal Popup untuk komentar utama -->
@@ -224,6 +231,9 @@
     };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+
+    /***** Global Object untuk Menyimpan Status Reply Container *****/
+    const replyOpenState = {}; // key: commentKey, value: boolean (true jika container reply terbuka)
 
     /***** Fungsi Utilitas *****/
     function getCurrentDateTime() {
@@ -282,27 +292,32 @@
           });
       });
 
-      // Tambahkan tombol "Balas" hanya untuk komentar utama (bukan reply)
+      // Untuk komentar utama, tambahkan tombol toggle untuk reply (jika sudah ada balasan atau untuk menambah reply)
       if (!isReply) {
-        // Tampilkan tombol Balas hanya jika belum ada balasan
-        if (!data.replies || Object.keys(data.replies).length === 0) {
-          const replyBtn = document.createElement('button');
-          replyBtn.className = 'reply-btn';
-          replyBtn.textContent = 'Balas';
-          commentDiv.appendChild(replyBtn);
+        // Hitung jumlah reply
+        const replyCount = data.replies ? Object.keys(data.replies).length : 0;
+        const toggleReplyBtn = document.createElement('button');
+        toggleReplyBtn.className = 'toggle-reply-btn';
+        toggleReplyBtn.textContent = replyCount > 0 ? `Balas (${replyCount})` : 'Balas';
+        commentDiv.appendChild(toggleReplyBtn);
 
-          replyBtn.addEventListener('click', () => {
-            toggleReplyForm(commentDiv, commentKey, data);
-          });
-        }
+        toggleReplyBtn.addEventListener('click', () => {
+          toggleReplies(commentDiv, commentKey, data);
+        });
       }
 
       // Container untuk balasan
       const repliesContainer = document.createElement('div');
       repliesContainer.className = 'replies';
+      // Set status berdasarkan global replyOpenState
+      if (!isReply && replyOpenState[commentKey]) {
+        repliesContainer.style.display = 'block';
+      } else {
+        repliesContainer.style.display = 'none';
+      }
       commentDiv.appendChild(repliesContainer);
 
-      // Tampilkan balasan jika ada
+      // Tampilkan reply jika ada
       if (data.replies) {
         Object.keys(data.replies).forEach(replyKey => {
           const replyData = data.replies[replyKey];
@@ -313,61 +328,70 @@
       return commentDiv;
     }
 
-    /***** Fungsi Toggle Form Balasan *****
-     * Jika sudah ada balasan, tidak memperbolehkan balasan lagi.
-     * Form reply menambahkan input untuk "Inisial (opsional)" dan textarea.
+    /***** Fungsi Toggle Replies *****
+     * Fungsi ini menampilkan atau menyembunyikan container reply beserta form reply.
      */
-    function toggleReplyForm(parentDiv, parentKey, parentData) {
+    function toggleReplies(parentDiv, parentKey, parentData) {
       const repliesContainer = parentDiv.querySelector('.replies');
-      if (repliesContainer.childNodes.length > 0) {
-        alert("Komentar ini sudah memiliki balasan dan tidak dapat dibalas lagi.");
-        return;
-      }
-      const existingForm = parentDiv.querySelector('.reply-form');
-      if (existingForm) {
-        parentDiv.removeChild(existingForm);
+      // Toggle status: jika saat ini disembunyikan, tampilkan; jika terlihat, sembunyikan.
+      if (repliesContainer.style.display === 'none' || repliesContainer.style.display === '') {
+        repliesContainer.style.display = 'block';
+        replyOpenState[parentKey] = true;
+        // Tampilkan form reply di bawah container, jika belum ada.
+        if (!parentDiv.querySelector('.reply-form')) {
+          const replyForm = document.createElement('div');
+          replyForm.className = 'reply-form';
+
+          // Input inisial untuk reply (opsional)
+          const replyInitialsInput = document.createElement('input');
+          replyInitialsInput.setAttribute('placeholder', 'Inisial (opsional)');
+          replyForm.appendChild(replyInitialsInput);
+
+          // Textarea untuk reply
+          const replyTextarea = document.createElement('textarea');
+          replyTextarea.setAttribute('placeholder', 'Tulis balasan Anda...');
+          replyForm.appendChild(replyTextarea);
+
+          // Tombol kirim reply
+          const sendReplyBtn = document.createElement('button');
+          sendReplyBtn.textContent = 'Kirim Balasan';
+          replyForm.appendChild(sendReplyBtn);
+
+          sendReplyBtn.addEventListener('click', () => {
+            const replyText = replyTextarea.value.trim();
+            if (!replyText) {
+              alert('Balasan tidak boleh kosong.');
+              return;
+            }
+            const replyInitial = replyInitialsInput.value.trim() || "Anonymous";
+            // Data reply: "dari" diambil dari inisial reply, "untuk" diambil dari nilai "dari" komentar induk
+            const replyData = {
+              dari: replyInitial,
+              untuk: (parentData.dari && parentData.dari.trim() !== '') ? parentData.dari.trim() : "Anonymous",
+              text: replyText,
+              dateTime: getCurrentDateTime(),
+              love: 0
+            };
+            // Simpan reply ke Firebase di bawah node 'replies' dari komentar induk
+            database.ref(`comments/${parentKey}/replies`).push(replyData)
+              .then(() => {
+                // Setelah berhasil, clear form (tetap biarkan container reply tetap terbuka)
+                replyInitialsInput.value = '';
+                replyTextarea.value = '';
+              })
+              .catch(console.error);
+          });
+          // Tempel form reply setelah container replies
+          parentDiv.appendChild(replyForm);
+        }
       } else {
-        const replyForm = document.createElement('div');
-        replyForm.className = 'reply-form';
-
-        // Input untuk inisial (opsional)
-        const replyInitialsInput = document.createElement('input');
-        replyInitialsInput.setAttribute('placeholder', 'Inisial (opsional)');
-        replyForm.appendChild(replyInitialsInput);
-
-        // Textarea untuk balasan
-        const replyTextarea = document.createElement('textarea');
-        replyTextarea.setAttribute('placeholder', 'Tulis balasan Anda...');
-        replyForm.appendChild(replyTextarea);
-
-        // Tombol kirim balasan
-        const sendReplyBtn = document.createElement('button');
-        sendReplyBtn.textContent = 'Kirim Balasan';
-        replyForm.appendChild(sendReplyBtn);
-
-        sendReplyBtn.addEventListener('click', () => {
-          const replyText = replyTextarea.value.trim();
-          if (!replyText) {
-            alert('Balasan tidak boleh kosong.');
-            return;
-          }
-          // Ambil inisial dari input (opsional)
-          const replyInitial = replyInitialsInput.value.trim() || "Anonymous";
-          // Data balasan: "dari" diambil dari inisial yang dimasukkan, "untuk" diambil dari nilai "dari" komentar induk
-          const replyData = {
-            dari: replyInitial,
-            untuk: (parentData.dari && parentData.dari.trim() !== '') ? parentData.dari.trim() : "Anonymous",
-            text: replyText,
-            dateTime: getCurrentDateTime(),
-            love: 0
-          };
-          database.ref(`comments/${parentKey}/replies`).push(replyData)
-            .then(() => {
-              parentDiv.removeChild(replyForm);
-            })
-            .catch(console.error);
-        });
-        parentDiv.appendChild(replyForm);
+        repliesContainer.style.display = 'none';
+        replyOpenState[parentKey] = false;
+        // Hapus form reply jika ada
+        const existingForm = parentDiv.querySelector('.reply-form');
+        if (existingForm) {
+          parentDiv.removeChild(existingForm);
+        }
       }
     }
 
@@ -375,17 +399,14 @@
     document.getElementById('openModalBtn').addEventListener('click', () => {
       document.getElementById('commentModal').style.display = 'flex';
     });
-
     document.querySelector('.close-modal').addEventListener('click', () => {
       document.getElementById('commentModal').style.display = 'none';
     });
-
     window.addEventListener('click', (e) => {
       if (e.target === document.getElementById('commentModal')) {
         document.getElementById('commentModal').style.display = 'none';
       }
     });
-
     document.getElementById('submitModalComment').addEventListener('click', () => {
       const text = document.getElementById('modalCommentText').value.trim();
       if (!text) {
@@ -413,11 +434,11 @@
     database.ref('comments').on('value', (snapshot) => {
       const commentsContainer = document.getElementById('commentsContainer');
       commentsContainer.innerHTML = '';
-      // Untuk menampilkan komentar terbaru di atas, ambil snapshot dalam array dan reverse urutannya.
       let commentsArray = [];
       snapshot.forEach(childSnapshot => {
         commentsArray.push(childSnapshot);
       });
+      // Urutkan agar komentar terbaru muncul di atas
       commentsArray.reverse();
       commentsArray.forEach(childSnapshot => {
         const commentKey = childSnapshot.key;
