@@ -218,8 +218,8 @@
   <div id="commentModal" class="modal">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
-      <input type="text" id="modalDari" placeholder="Dari (jika tak diisi otomatis menjadi anonim)">
-      <input type="text" id="modalUntuk" placeholder="Untuk (jika tak diisi otomatis menjadi adinugz)">
+      <input type="text" id="modalDari" placeholder="Dari (anonim jika tak diisi)">
+      <input type="text" id="modalUntuk" placeholder="Untuk (adinugz jika tak diisi)">
       <textarea id="modalCommentText" rows="3" placeholder="Tulis Pesan Kamu..."></textarea>
       <button id="submitModalComment">Kirim Komentar</button>
     </div>
@@ -289,7 +289,7 @@
         const currentKey = commentDiv.getAttribute('data-key');
         // Cek apakah user sudah memberikan love untuk komentar ini
         if (localStorage.getItem('loved_' + currentKey)) {
-          alert("Anda sudah memberi love pada komentar ini!");
+          alert("ojo mbok like maneh ta cok!!");
           return;
         }
         const parentKeyAttr = commentDiv.getAttribute('data-parent-key');
@@ -360,7 +360,7 @@
           replyForm.className = 'reply-form';
 
           const replyInitialsInput = document.createElement('input');
-          replyInitialsInput.setAttribute('placeholder', 'Dari (jika tak diisi otomatis menjadi anonim)');
+          replyInitialsInput.setAttribute('placeholder', 'Dari (anonim jika tak diisi)');
           replyForm.appendChild(replyInitialsInput);
 
           const replyTextarea = document.createElement('textarea');
@@ -421,7 +421,7 @@
     document.getElementById('submitModalComment').addEventListener('click', () => {
       const text = document.getElementById('modalCommentText').value.trim();
       if (!text) {
-        alert('Komentar tidak boleh kosong.');
+        alert('Niat ngisi opo gaa.');
         return;
       }
       const commentData = {
