@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistem Komentar dengan Popup, Firebase & Reply Maksimal 1 Kali</title>
+  <title>Sistem Komentar dengan Popup, Firebase, Reply (dengan Inisial) & Komentar Terbaru di Atas</title>
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * {
@@ -13,7 +15,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Inter', sans-serif;
       line-height: 1.6;
@@ -21,14 +22,12 @@
       background-color: #f5f7fa;
       padding: 2rem;
     }
-
     h2 {
       text-align: center;
       color: #1a365d;
       margin-bottom: 2rem;
       font-weight: 600;
     }
-
     #openModalBtn {
       display: block;
       margin: 0 auto 2rem;
@@ -42,11 +41,9 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-
     #openModalBtn:hover {
       background-color: #3182ce;
     }
-
     .modal {
       display: none;
       position: fixed;
@@ -59,7 +56,6 @@
       align-items: center;
       z-index: 1000;
     }
-
     .modal-content {
       background-color: white;
       padding: 2rem;
@@ -68,14 +64,12 @@
       max-width: 500px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-
     .close-modal {
       float: right;
       font-size: 1.5rem;
       cursor: pointer;
       color: #666;
     }
-
     .modal input,
     .modal textarea {
       width: 100%;
@@ -85,12 +79,10 @@
       border-radius: 6px;
       font-size: 1rem;
     }
-
     .modal textarea {
       resize: vertical;
       min-height: 100px;
     }
-
     #submitModalComment {
       width: 100%;
       padding: 0.75rem;
@@ -104,16 +96,13 @@
       margin-top: 1rem;
       transition: background-color 0.2s;
     }
-
     #submitModalComment:hover {
       background-color: #3182ce;
     }
-
     #commentsContainer {
       max-width: 800px;
       margin: 0 auto;
     }
-
     .comment {
       background-color: white;
       padding: 1.5rem;
@@ -121,18 +110,19 @@
       margin-bottom: 1.5rem;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-
+    .comment.reply {
+      margin-left: 2rem;
+      background-color: #f8fafc;
+    }
     .comment-header {
       color: #718096;
       font-size: 0.875rem;
       margin-bottom: 0.5rem;
     }
-
     .comment-body {
       color: #2d3748;
       margin-bottom: 1rem;
     }
-
     .love-btn,
     .reply-btn {
       background-color: transparent;
@@ -144,29 +134,27 @@
       font-size: 0.875rem;
       transition: all 0.2s;
     }
-
     .love-btn:hover {
       background-color: #fed7d7;
       border-color: #fc8181;
     }
-
     .reply-btn:hover {
       background-color: #e2e8f0;
     }
-
-    .reply {
-      margin-left: 2rem;
-      margin-top: 1rem;
-      background-color: #f8fafc;
-    }
-
     .reply-form {
       margin-top: 1rem;
       padding: 1rem;
       background-color: #f8fafc;
       border-radius: 8px;
     }
-
+    .reply-form input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
     .reply-form textarea {
       width: 100%;
       padding: 0.75rem;
@@ -174,8 +162,8 @@
       border-radius: 6px;
       margin-bottom: 0.5rem;
       resize: vertical;
+      min-height: 80px;
     }
-
     .reply-form button {
       background-color: #4299e1;
       color: white;
@@ -186,24 +174,19 @@
       font-size: 0.875rem;
       transition: background-color 0.2s;
     }
-
     .reply-form button:hover {
       background-color: #3182ce;
     }
-
     .replies {
       margin-top: 1rem;
     }
-
     @media (max-width: 640px) {
       body {
         padding: 1rem;
       }
-
       .comment {
         padding: 1rem;
       }
-
       .reply {
         margin-left: 1rem;
       }
@@ -211,9 +194,10 @@
   </style>
 </head>
 <body>
-  <h2>Sistem Komentar dengan Popup, Firebase & Reply Maksimal 1 Kali</h2>
+  <h2>Sistem Komentar dengan Popup, Firebase, Reply (dengan Inisial) & Komentar Terbaru di Atas</h2>
   <button id="openModalBtn">Tulis</button>
 
+  <!-- Modal Popup untuk komentar utama -->
   <div id="commentModal" class="modal">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
@@ -224,9 +208,11 @@
     </div>
   </div>
 
+  <!-- Container untuk menampilkan komentar dan balasan -->
   <div id="commentsContainer"></div>
 
   <script>
+    /***** Inisialisasi Firebase *****/
     const firebaseConfig = {
       apiKey: "AIzaSyDhdf1bFeEOQnOU2RQAd_7358Q71wgdqMs",
       authDomain: "coba-af566.firebaseapp.com",
@@ -239,32 +225,41 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    /***** Fungsi Utilitas *****/
     function getCurrentDateTime() {
       return new Date().toLocaleString();
     }
 
+    /***** Fungsi Membuat Elemen Komentar *****
+     * Parameter:
+     *   data: objek komentar (dari, untuk, text, dateTime, love, replies)
+     *   commentKey: key Firebase untuk komentar (digunakan untuk update)
+     *   isReply (opsional): jika true, maka elemen dianggap sebagai balasan.
+     *   parentKey (opsional): key Firebase dari komentar induk (jika ini reply)
+     */
     function createCommentElement(data, commentKey, isReply = false, parentKey = null) {
       const commentDiv = document.createElement('div');
       commentDiv.className = isReply ? 'comment reply' : 'comment';
       commentDiv.setAttribute('data-key', commentKey);
-      
-      if (isReply) {
+      if (isReply && parentKey) {
         commentDiv.setAttribute('data-parent-key', parentKey);
       }
-
       const dariDisplay = data.dari && data.dari.trim() !== '' ? data.dari.trim() : 'Anonymous';
       const untukDisplay = data.untuk && data.untuk.trim() !== '' ? data.untuk.trim() : 'Umum';
 
+      // Header komentar
       const headerDiv = document.createElement('div');
       headerDiv.className = 'comment-header';
       headerDiv.textContent = `Dari: ${dariDisplay} | Untuk: ${untukDisplay} • ${data.dateTime}`;
       commentDiv.appendChild(headerDiv);
 
+      // Isi komentar
       const bodyDiv = document.createElement('div');
       bodyDiv.className = 'comment-body';
       bodyDiv.textContent = data.text;
       commentDiv.appendChild(bodyDiv);
 
+      // Tombol Love
       const loveBtn = document.createElement('button');
       loveBtn.className = 'love-btn';
       loveBtn.textContent = `❤️ (${data.love || 0})`;
@@ -272,15 +267,13 @@
 
       loveBtn.addEventListener('click', () => {
         const currentKey = commentDiv.getAttribute('data-key');
-        const parentKey = commentDiv.getAttribute('data-parent-key');
+        const parentKeyAttr = commentDiv.getAttribute('data-parent-key');
         let refPath;
-
-        if (parentKey) {
-          refPath = `comments/${parentKey}/replies/${currentKey}/love`;
+        if (parentKeyAttr) {
+          refPath = `comments/${parentKeyAttr}/replies/${currentKey}/love`;
         } else {
           refPath = `comments/${currentKey}/love`;
         }
-
         const newLoveCount = (data.love || 0) + 1;
         database.ref(refPath).set(newLoveCount)
           .then(() => {
@@ -289,21 +282,27 @@
           });
       });
 
+      // Tambahkan tombol "Balas" hanya untuk komentar utama (bukan reply)
       if (!isReply) {
-        const replyBtn = document.createElement('button');
-        replyBtn.className = 'reply-btn';
-        replyBtn.textContent = 'Balas';
-        commentDiv.appendChild(replyBtn);
+        // Tampilkan tombol Balas hanya jika belum ada balasan
+        if (!data.replies || Object.keys(data.replies).length === 0) {
+          const replyBtn = document.createElement('button');
+          replyBtn.className = 'reply-btn';
+          replyBtn.textContent = 'Balas';
+          commentDiv.appendChild(replyBtn);
 
-        replyBtn.addEventListener('click', () => {
-          toggleReplyForm(commentDiv, commentKey, data);
-        });
+          replyBtn.addEventListener('click', () => {
+            toggleReplyForm(commentDiv, commentKey, data);
+          });
+        }
       }
 
+      // Container untuk balasan
       const repliesContainer = document.createElement('div');
       repliesContainer.className = 'replies';
       commentDiv.appendChild(repliesContainer);
 
+      // Tampilkan balasan jika ada
       if (data.replies) {
         Object.keys(data.replies).forEach(replyKey => {
           const replyData = data.replies[replyKey];
@@ -314,13 +313,16 @@
       return commentDiv;
     }
 
+    /***** Fungsi Toggle Form Balasan *****
+     * Jika sudah ada balasan, tidak memperbolehkan balasan lagi.
+     * Form reply menambahkan input untuk "Inisial (opsional)" dan textarea.
+     */
     function toggleReplyForm(parentDiv, parentKey, parentData) {
       const repliesContainer = parentDiv.querySelector('.replies');
       if (repliesContainer.childNodes.length > 0) {
         alert("Komentar ini sudah memiliki balasan dan tidak dapat dibalas lagi.");
         return;
       }
-      
       const existingForm = parentDiv.querySelector('.reply-form');
       if (existingForm) {
         parentDiv.removeChild(existingForm);
@@ -328,36 +330,48 @@
         const replyForm = document.createElement('div');
         replyForm.className = 'reply-form';
 
+        // Input untuk inisial (opsional)
+        const replyInitialsInput = document.createElement('input');
+        replyInitialsInput.setAttribute('placeholder', 'Inisial (opsional)');
+        replyForm.appendChild(replyInitialsInput);
+
+        // Textarea untuk balasan
         const replyTextarea = document.createElement('textarea');
-        replyTextarea.placeholder = 'Tulis balasan Anda...';
+        replyTextarea.setAttribute('placeholder', 'Tulis balasan Anda...');
         replyForm.appendChild(replyTextarea);
 
+        // Tombol kirim balasan
         const sendReplyBtn = document.createElement('button');
         sendReplyBtn.textContent = 'Kirim Balasan';
         replyForm.appendChild(sendReplyBtn);
 
         sendReplyBtn.addEventListener('click', () => {
           const replyText = replyTextarea.value.trim();
-          if (!replyText) return alert('Balasan tidak boleh kosong.');
-
+          if (!replyText) {
+            alert('Balasan tidak boleh kosong.');
+            return;
+          }
+          // Ambil inisial dari input (opsional)
+          const replyInitial = replyInitialsInput.value.trim() || "Anonymous";
+          // Data balasan: "dari" diambil dari inisial yang dimasukkan, "untuk" diambil dari nilai "dari" komentar induk
           const replyData = {
-            dari: "Anonymous",
-            untuk: parentData.dari?.trim() || "Anonymous",
+            dari: replyInitial,
+            untuk: (parentData.dari && parentData.dari.trim() !== '') ? parentData.dari.trim() : "Anonymous",
             text: replyText,
             dateTime: getCurrentDateTime(),
             love: 0
           };
-
           database.ref(`comments/${parentKey}/replies`).push(replyData)
-            .then(() => parentDiv.removeChild(replyForm))
+            .then(() => {
+              parentDiv.removeChild(replyForm);
+            })
             .catch(console.error);
         });
-
         parentDiv.appendChild(replyForm);
       }
     }
 
-    // Event Listeners
+    /***** Event Listener untuk Modal Komentar Utama *****/
     document.getElementById('openModalBtn').addEventListener('click', () => {
       document.getElementById('commentModal').style.display = 'flex';
     });
@@ -374,8 +388,10 @@
 
     document.getElementById('submitModalComment').addEventListener('click', () => {
       const text = document.getElementById('modalCommentText').value.trim();
-      if (!text) return alert('Komentar tidak boleh kosong.');
-
+      if (!text) {
+        alert('Komentar tidak boleh kosong.');
+        return;
+      }
       const commentData = {
         dari: document.getElementById('modalDari').value.trim() || 'Anonymous',
         untuk: document.getElementById('modalUntuk').value.trim() || 'Umum',
@@ -383,7 +399,6 @@
         dateTime: getCurrentDateTime(),
         love: 0
       };
-
       database.ref('comments').push(commentData)
         .then(() => {
           document.getElementById('commentModal').style.display = 'none';
@@ -394,15 +409,21 @@
         .catch(console.error);
     });
 
-    // Realtime Listener
+    /***** Realtime Listener untuk Menampilkan Komentar *****/
     database.ref('comments').on('value', (snapshot) => {
       const commentsContainer = document.getElementById('commentsContainer');
       commentsContainer.innerHTML = '';
-      
+      // Untuk menampilkan komentar terbaru di atas, ambil snapshot dalam array dan reverse urutannya.
+      let commentsArray = [];
       snapshot.forEach(childSnapshot => {
+        commentsArray.push(childSnapshot);
+      });
+      commentsArray.reverse();
+      commentsArray.forEach(childSnapshot => {
         const commentKey = childSnapshot.key;
         const commentData = childSnapshot.val();
-        commentsContainer.appendChild(createCommentElement(commentData, commentKey));
+        const commentElement = createCommentElement(commentData, commentKey);
+        commentsContainer.appendChild(commentElement);
       });
     });
   </script>
