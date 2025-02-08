@@ -44,6 +44,11 @@
       font-size: 1.5rem;
       color: #1a365d;
     }
+    /* Container untuk tombol header (Tentang & Ganti Mode) */
+    .header-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
     header button {
       background-color: transparent;
       border: none;
@@ -255,13 +260,83 @@
       cursor: pointer;
       color: #4299e1;
     }
+    
+    /* ===== Dark Mode Styles ===== */
+    body.dark-mode {
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    body.dark-mode header {
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    body.dark-mode header h1 {
+      color: #f5f7fa;
+    }
+    body.dark-mode header button {
+      color: #66b2ff;
+    }
+    body.dark-mode .modal-content {
+      background-color: #333;
+      color: #e0e0e0;
+    }
+    body.dark-mode .reply-form {
+      background-color: #333;
+    }
+    body.dark-mode .message-modal {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    body.dark-mode input,
+    body.dark-mode textarea {
+      background-color: #555;
+      color: #e0e0e0;
+      border-color: #777;
+    }
+    body.dark-mode .comment {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    body.dark-mode .comment.reply {
+      background-color: #2a2a2a;
+    }
+    /* Perbaiki warna teks agar mudah dibaca */
+    body.dark-mode .description {
+      color: #e0e0e0;
+    }
+    body.dark-mode .comment-header {
+      color: #b0b0b0;
+    }
+    body.dark-mode .comment-body {
+      color: #e0e0e0;
+    }
+    body.dark-mode a {
+      color: #66b2ff;
+    }
+    /* Tambahan: Perbaiki warna tombol "love" dan "balas" agar terlihat di mode gelap */
+    body.dark-mode .love-btn,
+    body.dark-mode .toggle-reply-btn {
+      border-color: #777;
+      color: #e0e0e0;
+    }
+    body.dark-mode .love-btn:hover {
+      background-color: #fc8181;
+    }
+    body.dark-mode .toggle-reply-btn:hover {
+      background-color: #555;
+    }
   </style>
 </head>
 <body>
   <!-- Fixed Header -->
   <header>
     <h1>KELUH KESAH</h1>
-    <button id="openMessageBtn">Tentang</button>
+    <div class="header-controls">
+      <button id="openMessageBtn" aria-label="Tentang">Tentang</button>
+      <!-- Tombol toggle dark mode menggunakan ikon -->
+      <button id="toggleDarkModeBtn" aria-label="Mode Gelap">🌙</button>
+    </div>
   </header>
 
   <!-- Deskripsi (opsional) -->
@@ -526,6 +601,21 @@
         const commentElement = createCommentElement(commentData, commentKey);
         commentsContainer.appendChild(commentElement);
       });
+    });
+
+    /***** Dark Mode Toggle dengan Ikon *****/
+    const toggleDarkModeBtn = document.getElementById('toggleDarkModeBtn');
+    toggleDarkModeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        // Tampilkan ikon matahari untuk opsi mode terang
+        toggleDarkModeBtn.innerHTML = '☀';
+        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Terang');
+      } else {
+        // Tampilkan ikon bulan untuk opsi mode gelap
+        toggleDarkModeBtn.innerHTML = '🌙';
+        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
+      }
     });
   </script>
 </body>
