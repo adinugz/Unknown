@@ -41,7 +41,7 @@
       background-color: var(--color-bg-dark);
       color: var(--color-text-dark);
     }
-    /* Header */
+    /* Fixed Header */
     header {
       position: fixed;
       top: 0;
@@ -65,10 +65,7 @@
       color: #1a365d;
       font-weight: 600;
     }
-    /* Tambahan: Ubah warna header h1 di dark mode */
-    body.dark-mode header h1 {
-      color: #fff;
-    }
+    /* Tombol header */
     .header-controls {
       display: flex;
       gap: 0.5rem;
@@ -77,7 +74,7 @@
     header button {
       background-color: transparent;
       border: none;
-      font-size: 1.25rem;
+      font-size: 1rem;
       cursor: pointer;
       color: var(--color-primary);
     }
@@ -97,6 +94,20 @@
       height: 24px;
       display: inline-block;
       vertical-align: middle;
+    }
+    /* Tombol untuk membuka panel "Pilih Backsound" */
+    #openBacksoundBtn {
+      font-size: 1rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--color-primary);
+      border-radius: 4px;
+      background-color: transparent;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #openBacksoundBtn:hover {
+      background-color: var(--color-primary-hover);
+      color: #fff;
     }
     /* Deskripsi */
     .description {
@@ -124,7 +135,7 @@
       background-color: var(--color-primary-hover);
       transform: translateY(-2px);
     }
-    /* Modal Popup untuk Komentar */
+    /* Modal Popup untuk Komentar Utama */
     .modal {
       display: none;
       position: fixed;
@@ -351,6 +362,79 @@
     body.dark-mode .toggle-reply-btn:hover {
       background-color: #555;
     }
+    /* --- Panel BackSound (split-screen di bagian bawah) --- */
+    #backSoundPanel {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(135deg, #fff, #f8fafc);
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+      z-index: 1300;
+    }
+    .backsound-panel-header {
+      height: 50px;
+      background-color: #f8f8f8;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      justify-content: space-between;
+    }
+    .backsound-panel-header input {
+      flex: 1;
+      padding: 0.5rem;
+      margin-right: 0.5rem;
+      background-color: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      color: #333;
+    }
+    .backsound-panel-header button {
+      background-color: #4299e1;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+    .backsound-panel-header span {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #4299e1;
+    }
+    /* Iframe untuk YouTube Player */
+    #youtubePlayer {
+      width: 100%;
+      height: calc(100% - 50px);
+      border: none;
+    }
+    /* --- Penyesuaian Dark Mode untuk Panel BackSound --- */
+    body.dark-mode #backSoundPanel {
+      background: linear-gradient(135deg, var(--color-header-dark), #2a2a2a);
+      box-shadow: 0 -4px 10px var(--color-shadow-dark);
+    }
+    body.dark-mode .backsound-panel-header {
+      background-color: var(--color-header-dark);
+    }
+    body.dark-mode .backsound-panel-header input {
+      background-color: #555;
+      color: var(--color-text-dark);
+      border-color: #777;
+    }
+    body.dark-mode .backsound-panel-header button {
+      background-color: var(--color-primary-hover);
+      color: #fff;
+    }
+    body.dark-mode .backsound-panel-header span {
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -359,10 +443,10 @@
     <h1>KELUH KESAH</h1>
     <div class="header-controls">
       <button id="openMessageBtn" aria-label="Tentang">Tentang</button>
-      <!-- Tombol toggle dark mode -->
       <button id="toggleDarkModeBtn" aria-label="Mode Gelap">
-        <!-- Awalnya mode terang, sehingga tampilkan ikon bulan -->
+        <!-- Icon akan di-set melalui script -->
       </button>
+      <button id="openBacksoundBtn" class="header-btn" aria-label="Pilih Backsound">Pilih Backsound</button>
     </div>
   </header>
 
@@ -385,279 +469,28 @@
     </div>
   </div>
 
-  <!-- Modal untuk Pesan (Placeholder untuk halaman pesan) -->
+  <!-- Modal untuk Pesan (Tentang) -->
   <div id="messageModal" class="message-modal">
     <span class="close-message-modal">&times;</span>
     <a href="https://www.instagram.com/adinugz" target="_blank">@adinugz</a>
-    <p> Dibuat karena fomo AI.. aku gaiso coding hehe.. </p>
+    <p>Dibuat karena fomo AI.. aku gaiso coding hehe..</p>
   </div>
 
   <!-- Container untuk menampilkan komentar dan reply -->
   <div id="commentsContainer"></div>
 
+  <!-- Panel BackSound (split-screen di bagian bawah) -->
+  <div id="backSoundPanel">
+    <div class="backsound-panel-header">
+      <input type="text" id="youtubeSearchQuery" placeholder="Cari backsound...">
+      <button id="youtubeSearchBtn">Cari</button>
+      <span id="closeBacksoundPanel">&times;</span>
+    </div>
+    <iframe id="youtubePlayer" src="" allow="autoplay"></iframe>
+  </div>
+
   <script>
-    /***** Inisialisasi Firebase *****/
-    const firebaseConfig = {
-      apiKey: "AIzaSyDhdf1bFeEOQnOU2RQAd_7358Q71wgdqMs",
-      authDomain: "coba-af566.firebaseapp.com",
-      databaseURL: "https://coba-af566-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      projectId: "coba-af566",
-      storageBucket: "coba-af566.appspot.com",
-      messagingSenderId: "930386569622",
-      appId: "1:930386569622:web:4378bcecf2bfcf202b55b7"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    /***** Variabel untuk Icon Toggle *****/
-    // Ikon matahari (sun) dari SVG standar
-    const sunIconHTML = `
-      <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>`;
-    // Ikon bulan (moon) dari SVG standar
-    const moonIconHTML = `
-      <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0012 21a9 9 0 009-8.21z"></path>
-      </svg>`;
-
-    /***** Dark Mode Toggle *****/
-    const toggleDarkModeBtn = document.getElementById('toggleDarkModeBtn');
-    // Set ikon awal: mode terang (tampilkan ikon bulan)
-    toggleDarkModeBtn.innerHTML = moonIconHTML;
-    toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
-
-    toggleDarkModeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      if (document.body.classList.contains('dark-mode')) {
-        // Jika dark mode aktif, tampilkan ikon matahari
-        toggleDarkModeBtn.innerHTML = sunIconHTML;
-        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Terang');
-      } else {
-        // Jika mode terang, tampilkan ikon bulan
-        toggleDarkModeBtn.innerHTML = moonIconHTML;
-        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
-      }
-    });
-
-    /***** Fungsi Utilitas *****/
-    function getCurrentDateTime() {
-      return new Date().toLocaleString();
-    }
-
-    /***** Fungsi Membuat Elemen Komentar *****/
-    function createCommentElement(data, commentKey, isReply = false, parentKey = null) {
-      const commentDiv = document.createElement('div');
-      commentDiv.className = isReply ? 'comment reply' : 'comment';
-      commentDiv.setAttribute('data-key', commentKey);
-      if (isReply && parentKey) {
-        commentDiv.setAttribute('data-parent-key', parentKey);
-      }
-      const dariDisplay = data.dari && data.dari.trim() !== '' ? data.dari.trim() : 'anonim';
-      const untukDisplay = data.untuk && data.untuk.trim() !== '' ? data.untuk.trim() : 'adinugz';
-
-      // Header komentar
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'comment-header';
-      headerDiv.textContent = `Dari: ${dariDisplay} | Untuk: ${untukDisplay} • ${data.dateTime}`;
-      commentDiv.appendChild(headerDiv);
-
-      // Isi komentar
-      const bodyDiv = document.createElement('div');
-      bodyDiv.className = 'comment-body';
-      bodyDiv.textContent = data.text;
-      commentDiv.appendChild(bodyDiv);
-
-      // Tombol Love
-      const loveBtn = document.createElement('button');
-      loveBtn.className = 'love-btn';
-      loveBtn.textContent = `❤️ (${data.love || 0})`;
-      commentDiv.appendChild(loveBtn);
-
-      loveBtn.addEventListener('click', () => {
-        const currentKey = commentDiv.getAttribute('data-key');
-        if (localStorage.getItem('loved_' + currentKey)) {
-          alert("Sudah pernah like, terima kasih.");
-          return;
-        }
-        const parentKeyAttr = commentDiv.getAttribute('data-parent-key');
-        let refPath;
-        if (parentKeyAttr) {
-          refPath = `comments/${parentKeyAttr}/replies/${currentKey}/love`;
-        } else {
-          refPath = `comments/${currentKey}/love`;
-        }
-        const newLoveCount = (data.love || 0) + 1;
-        database.ref(refPath).set(newLoveCount)
-          .then(() => {
-            loveBtn.textContent = `❤️ (${newLoveCount})`;
-            data.love = newLoveCount;
-            localStorage.setItem('loved_' + currentKey, 'true');
-          });
-      });
-
-      // Untuk komentar utama, tampilkan tombol toggle reply
-      if (!isReply) {
-        const replyCount = data.replies ? Object.keys(data.replies).length : 0;
-        const toggleReplyBtn = document.createElement('button');
-        toggleReplyBtn.className = 'toggle-reply-btn';
-        toggleReplyBtn.textContent = replyCount > 0 ? `Balas (${replyCount})` : 'Balas';
-        commentDiv.appendChild(toggleReplyBtn);
-
-        toggleReplyBtn.addEventListener('click', () => {
-          toggleReplies(commentDiv, commentKey, data);
-        });
-      }
-
-      // Container untuk reply
-      const repliesContainer = document.createElement('div');
-      repliesContainer.className = 'replies';
-      if (!isReply) {
-        repliesContainer.style.display = replyOpenState[commentKey] ? 'block' : 'none';
-      } else {
-        repliesContainer.style.display = 'block';
-      }
-      commentDiv.appendChild(repliesContainer);
-
-      // Tampilkan reply jika ada
-      if (data.replies) {
-        Object.keys(data.replies).forEach(replyKey => {
-          const replyData = data.replies[replyKey];
-          const replyElement = createCommentElement(replyData, replyKey, true, commentKey);
-          repliesContainer.appendChild(replyElement);
-        });
-      }
-      return commentDiv;
-    }
-
-    /***** Global Object untuk Status Container Reply *****/
-    let replyOpenState = {};  // key: commentKey, value: boolean
-
-    /***** Fungsi Toggle Replies *****/
-    function toggleReplies(parentDiv, parentKey, parentData) {
-      const repliesContainer = parentDiv.querySelector('.replies');
-      if (repliesContainer.style.display === 'none' || repliesContainer.style.display === '') {
-        repliesContainer.style.display = 'block';
-        replyOpenState[parentKey] = true;
-        if (!parentDiv.querySelector('.reply-form')) {
-          const replyForm = document.createElement('div');
-          replyForm.className = 'reply-form';
-
-          const replyInitialsInput = document.createElement('input');
-          replyInitialsInput.setAttribute('placeholder', 'Dari (anonim jika tak diisi)');
-          replyForm.appendChild(replyInitialsInput);
-
-          const replyTextarea = document.createElement('textarea');
-          replyTextarea.setAttribute('placeholder', 'Tulis balasan Kamu...');
-          replyForm.appendChild(replyTextarea);
-
-          const sendReplyBtn = document.createElement('button');
-          sendReplyBtn.textContent = 'Kirim Balasan';
-          replyForm.appendChild(sendReplyBtn);
-
-          sendReplyBtn.addEventListener('click', () => {
-            const replyText = replyTextarea.value.trim();
-            if (!replyText) {
-              alert('Balasan tidak boleh kosong.');
-              return;
-            }
-            const replyInitial = replyInitialsInput.value.trim() || "anonim";
-            const replyData = {
-              dari: replyInitial,
-              untuk: (parentData.dari && parentData.dari.trim() !== '') ? parentData.dari.trim() : "anonim",
-              text: replyText,
-              dateTime: getCurrentDateTime(),
-              love: 0
-            };
-            database.ref(`comments/${parentKey}/replies`).push(replyData)
-              .then(() => {
-                replyInitialsInput.value = '';
-                replyTextarea.value = '';
-              })
-              .catch(console.error);
-          });
-          parentDiv.appendChild(replyForm);
-        }
-      } else {
-        repliesContainer.style.display = 'none';
-        replyOpenState[parentKey] = false;
-        const existingForm = parentDiv.querySelector('.reply-form');
-        if (existingForm) {
-          parentDiv.removeChild(existingForm);
-        }
-      }
-    }
-
-    /***** Event Listener untuk Modal Komentar Utama *****/
-    document.getElementById('openModalBtn').addEventListener('click', () => {
-      document.getElementById('commentModal').style.display = 'flex';
-    });
-    document.querySelector('.close-modal').addEventListener('click', () => {
-      document.getElementById('commentModal').style.display = 'none';
-    });
-    window.addEventListener('click', (e) => {
-      if (e.target === document.getElementById('commentModal')) {
-        document.getElementById('commentModal').style.display = 'none';
-      }
-    });
-    document.getElementById('submitModalComment').addEventListener('click', () => {
-      const text = document.getElementById('modalCommentText').value.trim();
-      if (!text) {
-        alert('Niat ngisi opo gaa.');
-        return;
-      }
-      const commentData = {
-        dari: document.getElementById('modalDari').value.trim() || 'anonim',
-        untuk: document.getElementById('modalUntuk').value.trim() || 'adinugz',
-        text: text,
-        dateTime: getCurrentDateTime(),
-        love: 0
-      };
-      database.ref('comments').push(commentData)
-        .then(() => {
-          document.getElementById('commentModal').style.display = 'none';
-          document.getElementById('modalDari').value = '';
-          document.getElementById('modalUntuk').value = '';
-          document.getElementById('modalCommentText').value = '';
-        })
-        .catch(console.error);
-    });
-
-    /***** Modal Pesan (Placeholder) *****/
-    document.getElementById('openMessageBtn').addEventListener('click', () => {
-      document.getElementById('messageModal').style.display = 'block';
-    });
-    document.querySelector('.close-message-modal').addEventListener('click', () => {
-      document.getElementById('messageModal').style.display = 'none';
-    });
-
-    /***** Realtime Listener untuk Menampilkan Komentar *****/
-    database.ref('comments').on('value', (snapshot) => {
-      const commentsContainer = document.getElementById('commentsContainer');
-      commentsContainer.innerHTML = '';
-      let commentsArray = [];
-      snapshot.forEach(childSnapshot => {
-        commentsArray.push(childSnapshot);
-      });
-      // Urutkan komentar terbaru di atas
-      commentsArray.reverse();
-      commentsArray.forEach(childSnapshot => {
-        const commentKey = childSnapshot.key;
-        const commentData = childSnapshot.val();
-        const commentElement = createCommentElement(commentData, commentKey);
-        commentsContainer.appendChild(commentElement);
-      });
-    });
+const _0x291692=_0x195b;(function(_0x4df5f1,_0x4ea005){const _0x2551a7=_0x195b,_0xf994d=_0x4df5f1();while(!![]){try{const _0x4b5071=parseInt(_0x2551a7(0x127))/0x1*(parseInt(_0x2551a7(0x105))/0x2)+-parseInt(_0x2551a7(0xfa))/0x3+-parseInt(_0x2551a7(0x139))/0x4+-parseInt(_0x2551a7(0x13b))/0x5*(-parseInt(_0x2551a7(0x155))/0x6)+parseInt(_0x2551a7(0x13f))/0x7+-parseInt(_0x2551a7(0xf3))/0x8+-parseInt(_0x2551a7(0x106))/0x9*(-parseInt(_0x2551a7(0xfc))/0xa);if(_0x4b5071===_0x4ea005)break;else _0xf994d['push'](_0xf994d['shift']());}catch(_0x514c6e){_0xf994d['push'](_0xf994d['shift']());}}}(_0x2338,0x26f4e));const firebaseConfig={'apiKey':_0x291692(0x10a),'authDomain':_0x291692(0x131),'databaseURL':'https://coba-af566-default-rtdb.asia-southeast1.firebasedatabase.app/','projectId':_0x291692(0x11d),'storageBucket':_0x291692(0xf2),'messagingSenderId':_0x291692(0x149),'appId':_0x291692(0x11c)};function _0x195b(_0x525ba3,_0x1e54a2){const _0x2338b8=_0x2338();return _0x195b=function(_0x195b23,_0x6ef1a6){_0x195b23=_0x195b23-0xf1;let _0x5254ba=_0x2338b8[_0x195b23];return _0x5254ba;},_0x195b(_0x525ba3,_0x1e54a2);}firebase['initializeApp'](firebaseConfig);const database=firebase[_0x291692(0x14b)](),sunIconHTML=_0x291692(0x160),moonIconHTML=_0x291692(0x137),toggleDarkModeBtn=document[_0x291692(0x135)](_0x291692(0x107));toggleDarkModeBtn[_0x291692(0x12c)]=moonIconHTML,toggleDarkModeBtn[_0x291692(0xf6)](_0x291692(0x136),_0x291692(0x157)),toggleDarkModeBtn[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x50e2cf=_0x291692;document['body'][_0x50e2cf(0x15b)]['toggle'](_0x50e2cf(0x101)),document[_0x50e2cf(0x13e)][_0x50e2cf(0x15b)][_0x50e2cf(0x163)](_0x50e2cf(0x101))?(toggleDarkModeBtn[_0x50e2cf(0x12c)]=sunIconHTML,toggleDarkModeBtn['setAttribute'](_0x50e2cf(0x136),'Mode\x20Terang')):(toggleDarkModeBtn[_0x50e2cf(0x12c)]=moonIconHTML,toggleDarkModeBtn[_0x50e2cf(0xf6)](_0x50e2cf(0x136),'Mode\x20Gelap'));});function getCurrentDateTime(){const _0x51b052=_0x291692;return new Date()[_0x51b052(0x13c)]();}function createCommentElement(_0x5097d3,_0x15a38e,_0xd7a9ce=![],_0x199d44=null){const _0x3fb787=_0x291692,_0x373d01=document[_0x3fb787(0x13a)]('div');_0x373d01[_0x3fb787(0x15e)]=_0xd7a9ce?_0x3fb787(0x108):_0x3fb787(0x132),_0x373d01[_0x3fb787(0xf6)](_0x3fb787(0x168),_0x15a38e);_0xd7a9ce&&_0x199d44&&_0x373d01[_0x3fb787(0xf6)](_0x3fb787(0x118),_0x199d44);const _0x4c4297=_0x5097d3[_0x3fb787(0xfe)]&&_0x5097d3[_0x3fb787(0xfe)][_0x3fb787(0x138)]()!==''?_0x5097d3['dari']['trim']():_0x3fb787(0xfb),_0xa69b91=_0x5097d3[_0x3fb787(0x142)]&&_0x5097d3[_0x3fb787(0x142)][_0x3fb787(0x138)]()!==''?_0x5097d3[_0x3fb787(0x142)]['trim']():_0x3fb787(0x12f),_0x20560c=document[_0x3fb787(0x13a)]('div');_0x20560c[_0x3fb787(0x15e)]=_0x3fb787(0x130),_0x20560c[_0x3fb787(0xf4)]=_0x3fb787(0x141)+_0x4c4297+_0x3fb787(0x113)+_0xa69b91+_0x3fb787(0x119)+_0x5097d3['dateTime'],_0x373d01[_0x3fb787(0x159)](_0x20560c);const _0xd7e0e1=document['createElement']('div');_0xd7e0e1[_0x3fb787(0x15e)]=_0x3fb787(0x143),_0xd7e0e1['textContent']=_0x5097d3[_0x3fb787(0x167)],_0x373d01[_0x3fb787(0x159)](_0xd7e0e1);const _0x478ede=document[_0x3fb787(0x13a)](_0x3fb787(0x117));_0x478ede[_0x3fb787(0x15e)]=_0x3fb787(0x152),_0x478ede['textContent']=_0x3fb787(0x148)+(_0x5097d3[_0x3fb787(0x14f)]||0x0)+')',_0x373d01[_0x3fb787(0x159)](_0x478ede),_0x478ede[_0x3fb787(0x122)](_0x3fb787(0x153),()=>{const _0x2ed20a=_0x3fb787,_0x4877ca=_0x373d01[_0x2ed20a(0x14a)]('data-key');if(localStorage[_0x2ed20a(0x10d)](_0x2ed20a(0x12a)+_0x4877ca)){alert(_0x2ed20a(0x146));return;}const _0x5d6a07=_0x373d01[_0x2ed20a(0x14a)](_0x2ed20a(0x118));let _0x599828;_0x5d6a07?_0x599828=_0x2ed20a(0x12e)+_0x5d6a07+_0x2ed20a(0x124)+_0x4877ca+_0x2ed20a(0x109):_0x599828='comments/'+_0x4877ca+_0x2ed20a(0x109);const _0x2d8203=(_0x5097d3[_0x2ed20a(0x14f)]||0x0)+0x1;database[_0x2ed20a(0x126)](_0x599828)[_0x2ed20a(0x111)](_0x2d8203)[_0x2ed20a(0x156)](()=>{const _0x543805=_0x2ed20a;_0x478ede[_0x543805(0xf4)]=_0x543805(0x148)+_0x2d8203+')',_0x5097d3[_0x543805(0x14f)]=_0x2d8203,localStorage['setItem'](_0x543805(0x12a)+_0x4877ca,_0x543805(0x11e));});});if(!_0xd7a9ce){const _0x31cf61=_0x5097d3['replies']?Object[_0x3fb787(0xff)](_0x5097d3['replies'])[_0x3fb787(0x144)]:0x0,_0x4deaac=document[_0x3fb787(0x13a)](_0x3fb787(0x117));_0x4deaac['className']=_0x3fb787(0x154),_0x4deaac[_0x3fb787(0xf4)]=_0x31cf61>0x0?_0x3fb787(0x151)+_0x31cf61+')':_0x3fb787(0x133),_0x373d01[_0x3fb787(0x159)](_0x4deaac),_0x4deaac[_0x3fb787(0x122)](_0x3fb787(0x153),()=>{toggleReplies(_0x373d01,_0x15a38e,_0x5097d3);});}const _0x3bd3b3=document[_0x3fb787(0x13a)](_0x3fb787(0x104));return _0x3bd3b3[_0x3fb787(0x15e)]=_0x3fb787(0x13d),!_0xd7a9ce?_0x3bd3b3[_0x3fb787(0x147)][_0x3fb787(0x116)]=replyOpenState[_0x15a38e]?'block':_0x3fb787(0x103):_0x3bd3b3['style'][_0x3fb787(0x116)]=_0x3fb787(0x129),_0x373d01['appendChild'](_0x3bd3b3),_0x5097d3[_0x3fb787(0x13d)]&&Object[_0x3fb787(0xff)](_0x5097d3[_0x3fb787(0x13d)])['forEach'](_0x56cd28=>{const _0x485248=_0x3fb787,_0x1f9053=_0x5097d3['replies'][_0x56cd28],_0x5d0799=createCommentElement(_0x1f9053,_0x56cd28,!![],_0x15a38e);_0x3bd3b3[_0x485248(0x159)](_0x5d0799);}),_0x373d01;}let replyOpenState={};function toggleReplies(_0x7d57d8,_0x524681,_0x451692){const _0x106f33=_0x291692,_0x18f07d=_0x7d57d8[_0x106f33(0x10f)]('.replies');if(_0x18f07d['style'][_0x106f33(0x116)]===_0x106f33(0x103)||_0x18f07d[_0x106f33(0x147)]['display']===''){_0x18f07d[_0x106f33(0x147)][_0x106f33(0x116)]=_0x106f33(0x129),replyOpenState[_0x524681]=!![];if(!_0x7d57d8[_0x106f33(0x10f)]('.reply-form')){const _0x5f15a7=document[_0x106f33(0x13a)](_0x106f33(0x104));_0x5f15a7[_0x106f33(0x15e)]='reply-form';const _0x446fb9=document[_0x106f33(0x13a)]('input');_0x446fb9['setAttribute']('placeholder',_0x106f33(0x11a)),_0x5f15a7[_0x106f33(0x159)](_0x446fb9);const _0x23b747=document['createElement'](_0x106f33(0xf5));_0x23b747[_0x106f33(0xf6)](_0x106f33(0x100),_0x106f33(0x128)),_0x5f15a7['appendChild'](_0x23b747);const _0x157660=document['createElement'](_0x106f33(0x117));_0x157660[_0x106f33(0xf4)]=_0x106f33(0x164),_0x5f15a7['appendChild'](_0x157660),_0x157660[_0x106f33(0x122)](_0x106f33(0x153),()=>{const _0x54fa17=_0x106f33,_0x5a66b5=_0x23b747['value'][_0x54fa17(0x138)]();if(!_0x5a66b5){alert(_0x54fa17(0x134));return;}const _0x325ae0=_0x446fb9[_0x54fa17(0x10b)]['trim']()||_0x54fa17(0xfb),_0x152345={'dari':_0x325ae0,'untuk':_0x451692[_0x54fa17(0xfe)]&&_0x451692[_0x54fa17(0xfe)][_0x54fa17(0x138)]()!==''?_0x451692[_0x54fa17(0xfe)][_0x54fa17(0x138)]():_0x54fa17(0xfb),'text':_0x5a66b5,'dateTime':getCurrentDateTime(),'love':0x0};database['ref']('comments/'+_0x524681+'/replies')[_0x54fa17(0x11b)](_0x152345)[_0x54fa17(0x156)](()=>{const _0x60dcd4=_0x54fa17;_0x446fb9['value']='',_0x23b747[_0x60dcd4(0x10b)]='';})[_0x54fa17(0x161)](console[_0x54fa17(0x123)]);}),_0x7d57d8[_0x106f33(0x159)](_0x5f15a7);}}else{_0x18f07d[_0x106f33(0x147)]['display']=_0x106f33(0x103),replyOpenState[_0x524681]=![];const _0x59c06f=_0x7d57d8[_0x106f33(0x10f)](_0x106f33(0x10e));_0x59c06f&&_0x7d57d8[_0x106f33(0x125)](_0x59c06f);}}document[_0x291692(0x135)](_0x291692(0xf1))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x3ce9d8=_0x291692;document[_0x3ce9d8(0x135)]('commentModal')[_0x3ce9d8(0x147)]['display']=_0x3ce9d8(0x12b);}),document[_0x291692(0x10f)](_0x291692(0x120))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0xb4739c=_0x291692;document['getElementById'](_0xb4739c(0xf9))[_0xb4739c(0x147)][_0xb4739c(0x116)]='none';}),window['addEventListener'](_0x291692(0x153),_0x32d84a=>{const _0x4fb6a7=_0x291692;_0x32d84a['target']===document[_0x4fb6a7(0x135)]('commentModal')&&(document[_0x4fb6a7(0x135)]('commentModal')['style'][_0x4fb6a7(0x116)]='none');}),document[_0x291692(0x135)](_0x291692(0x102))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x53698d=_0x291692,_0x5a2845=document[_0x53698d(0x135)](_0x53698d(0x162))[_0x53698d(0x10b)][_0x53698d(0x138)]();if(!_0x5a2845){alert(_0x53698d(0x14e));return;}const _0x4eb0f4={'dari':document[_0x53698d(0x135)](_0x53698d(0x165))[_0x53698d(0x10b)][_0x53698d(0x138)]()||'anonim','untuk':document[_0x53698d(0x135)](_0x53698d(0x166))['value'][_0x53698d(0x138)]()||_0x53698d(0x12f),'text':_0x5a2845,'dateTime':getCurrentDateTime(),'love':0x0};database[_0x53698d(0x126)](_0x53698d(0xf7))[_0x53698d(0x11b)](_0x4eb0f4)[_0x53698d(0x156)](()=>{const _0x59764b=_0x53698d;document['getElementById'](_0x59764b(0xf9))[_0x59764b(0x147)][_0x59764b(0x116)]=_0x59764b(0x103),document[_0x59764b(0x135)]('modalDari')['value']='',document['getElementById'](_0x59764b(0x166))['value']='',document['getElementById'](_0x59764b(0x162))[_0x59764b(0x10b)]='';})[_0x53698d(0x161)](console['error']);}),document[_0x291692(0x135)]('openMessageBtn')[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x566f8e=_0x291692;document[_0x566f8e(0x135)]('messageModal')[_0x566f8e(0x147)]['display']=_0x566f8e(0x129);}),document['querySelector'](_0x291692(0x11f))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x2bd92a=_0x291692;document[_0x2bd92a(0x135)](_0x2bd92a(0xf8))[_0x2bd92a(0x147)][_0x2bd92a(0x116)]=_0x2bd92a(0x103);}),database['ref']('comments')['on']('value',_0x491fc8=>{const _0x2a23a7=_0x291692,_0x5dca06=document['getElementById'](_0x2a23a7(0x15c));_0x5dca06[_0x2a23a7(0x12c)]='';let _0xfbf59=[];_0x491fc8['forEach'](_0x554a6d=>{_0xfbf59['push'](_0x554a6d);}),_0xfbf59[_0x2a23a7(0x145)](),_0xfbf59[_0x2a23a7(0x15d)](_0x514d96=>{const _0x440a2d=_0x2a23a7,_0x1cd692=_0x514d96[_0x440a2d(0x15f)],_0x5f2715=_0x514d96[_0x440a2d(0x140)](),_0x5a9cc6=createCommentElement(_0x5f2715,_0x1cd692);_0x5dca06[_0x440a2d(0x159)](_0x5a9cc6);});}),document['getElementById'](_0x291692(0x15a))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x5199d0=_0x291692;document[_0x5199d0(0x135)](_0x5199d0(0x14c))[_0x5199d0(0x147)]['display']='block';}),document[_0x291692(0x135)](_0x291692(0x114))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0x24c55e=_0x291692;document[_0x24c55e(0x135)](_0x24c55e(0x14c))['style'][_0x24c55e(0x116)]=_0x24c55e(0x103);}),document[_0x291692(0x135)](_0x291692(0x169))[_0x291692(0x122)](_0x291692(0x153),()=>{const _0xe3f32a=_0x291692,_0x49fc8d=document['getElementById'](_0xe3f32a(0x10c))[_0xe3f32a(0x10b)][_0xe3f32a(0x138)]();if(!_0x49fc8d)return;const _0x3e751a=_0xe3f32a(0x12d);fetch(_0xe3f32a(0x110)+encodeURIComponent(_0x49fc8d)+_0xe3f32a(0xfd)+_0x3e751a)['then'](_0x277500=>_0x277500[_0xe3f32a(0x14d)]())[_0xe3f32a(0x156)](_0x489725=>{const _0x2d9df9=_0xe3f32a;if(_0x489725['items']&&_0x489725['items'][_0x2d9df9(0x144)]>0x0){const _0x4b69db=_0x489725['items'][0x0]['id'][_0x2d9df9(0x112)];document[_0x2d9df9(0x135)]('youtubePlayer')['src']=_0x2d9df9(0x115)+_0x4b69db+_0x2d9df9(0x158);}else alert(_0x2d9df9(0x121));})[_0xe3f32a(0x161)](_0x5798c3=>{const _0x4c5c80=_0xe3f32a;console['error'](_0x5798c3),alert(_0x4c5c80(0x150));});});function _0x2338(){const _0x3c363c=['true','.close-message-modal','.close-modal','Video\x20tidak\x20ditemukan.','addEventListener','error','/replies/','removeChild','ref','225257xYDylc','Tulis\x20balasan\x20Kamu...','block','loved_','flex','innerHTML','AIzaSyDlljWWNg0NonzjJjGCocOXkl5EieKDtPY','comments/','adinugz','comment-header','coba-af566.firebaseapp.com','comment','Balas','Balasan\x20tidak\x20boleh\x20kosong.','getElementById','aria-label','\x0a\x20\x20\x20\x20\x20\x20<svg\x20class=\x22toggle-icon\x22\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20stroke-width=\x222\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<path\x20d=\x22M21\x2012.79A9\x209\x200\x200111.21\x203\x207\x207\x200\x200012\x2021a9\x209\x200\x20009-8.21z\x22></path>\x0a\x20\x20\x20\x20\x20\x20</svg>','trim','650624XXGbZV','createElement','551415YPwzat','toLocaleString','replies','body','495180FkbLVV','val','Dari:\x20','untuk','comment-body','length','reverse','Sudah\x20pernah\x20like,\x20terima\x20kasih.','style','❤️\x20(','930386569622','getAttribute','database','backSoundPanel','json','Niat\x20ngisi\x20opo\x20gaa.','love','Terjadi\x20kesalahan\x20saat\x20mencari\x20video.','Balas\x20(','love-btn','click','toggle-reply-btn','6DzfpPO','then','Mode\x20Gelap','?autoplay=1&mute=0','appendChild','openBacksoundBtn','classList','commentsContainer','forEach','className','key','\x0a\x20\x20\x20\x20\x20\x20<svg\x20class=\x22toggle-icon\x22\x20viewBox=\x220\x200\x2024\x2024\x22\x20fill=\x22none\x22\x20stroke=\x22currentColor\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20stroke-width=\x222\x22\x20stroke-linecap=\x22round\x22\x20stroke-linejoin=\x22round\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<circle\x20cx=\x2212\x22\x20cy=\x2212\x22\x20r=\x225\x22></circle>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2212\x22\x20y1=\x221\x22\x20x2=\x2212\x22\x20y2=\x223\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2212\x22\x20y1=\x2221\x22\x20x2=\x2212\x22\x20y2=\x2223\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x224.22\x22\x20y1=\x224.22\x22\x20x2=\x225.64\x22\x20y2=\x225.64\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2218.36\x22\x20y1=\x2218.36\x22\x20x2=\x2219.78\x22\x20y2=\x2219.78\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x221\x22\x20y1=\x2212\x22\x20x2=\x223\x22\x20y2=\x2212\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2221\x22\x20y1=\x2212\x22\x20x2=\x2223\x22\x20y2=\x2212\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x224.22\x22\x20y1=\x2219.78\x22\x20x2=\x225.64\x22\x20y2=\x2218.36\x22></line>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<line\x20x1=\x2218.36\x22\x20y1=\x225.64\x22\x20x2=\x2219.78\x22\x20y2=\x224.22\x22></line>\x0a\x20\x20\x20\x20\x20\x20</svg>','catch','modalCommentText','contains','Kirim\x20Balasan','modalDari','modalUntuk','text','data-key','youtubeSearchBtn','openModalBtn','coba-af566.appspot.com','1858080iAVzEu','textContent','textarea','setAttribute','comments','messageModal','commentModal','144756GXVPRR','anonim','10khDrTz','&type=video&maxResults=1&key=','dari','keys','placeholder','dark-mode','submitModalComment','none','div','2qpRbue','1768086dcMZUc','toggleDarkModeBtn','comment\x20reply','/love','AIzaSyDhdf1bFeEOQnOU2RQAd_7358Q71wgdqMs','value','youtubeSearchQuery','getItem','.reply-form','querySelector','https://www.googleapis.com/youtube/v3/search?part=snippet&q=','set','videoId','\x20|\x20Untuk:\x20','closeBacksoundPanel','https://www.youtube.com/embed/','display','button','data-parent-key','\x20•\x20','Dari\x20(anonim\x20jika\x20tak\x20diisi)','push','1:930386569622:web:4378bcecf2bfcf202b55b7','coba-af566'];_0x2338=function(){return _0x3c363c;};return _0x2338();}
   </script>
 </body>
 </html>
