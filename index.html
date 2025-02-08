@@ -1,15 +1,27 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keluh kesah</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Keluh Kesah</title>
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --color-primary: #4299e1;
+      --color-primary-hover: #3182ce;
+      --color-bg-light: #f5f7fa;
+      --color-bg-dark: #121212;
+      --color-text-light: #333;
+      --color-text-dark: #e0e0e0;
+      --color-header-light: #fff;
+      --color-header-dark: #1e1e1e;
+      --color-shadow-light: rgba(0, 0, 0, 0.1);
+      --color-shadow-dark: rgba(0, 0, 0, 0.5);
+    }
     /* Reset & Global */
     * {
       margin: 0;
@@ -19,69 +31,100 @@
     body {
       font-family: 'Inter', sans-serif;
       line-height: 1.6;
-      color: #333;
-      background-color: #f5f7fa;
+      background-color: var(--color-bg-light);
+      color: var(--color-text-light);
       padding: 2rem;
-      /* Beri ruang di atas agar tidak tertutup oleh header */
-      padding-top: 80px;
+      padding-top: 80px; /* ruang untuk header */
+      transition: background-color 0.3s, color 0.3s;
     }
-    /* Fixed Header */
+    body.dark-mode {
+      background-color: var(--color-bg-dark);
+      color: var(--color-text-dark);
+    }
+    /* Header */
     header {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 60px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, var(--color-header-light), #f0f0f0);
+      box-shadow: 0 2px 4px var(--color-shadow-light);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 1rem;
       z-index: 1100;
     }
+    body.dark-mode header {
+      background: linear-gradient(135deg, var(--color-header-dark), #2a2a2a);
+      box-shadow: 0 2px 4px var(--color-shadow-dark);
+    }
     header h1 {
       font-size: 1.5rem;
       color: #1a365d;
+      font-weight: 600;
     }
-    /* Container untuk tombol header (Tentang & Ganti Mode) */
+    /* Tambahan: Ubah warna header h1 di dark mode */
+    body.dark-mode header h1 {
+      color: #fff;
+    }
     .header-controls {
       display: flex;
       gap: 0.5rem;
+      align-items: center;
     }
     header button {
       background-color: transparent;
       border: none;
       font-size: 1.25rem;
       cursor: pointer;
-      color: #4299e1;
+      color: var(--color-primary);
     }
-    /* Deskripsi di bawah header */
+    /* Tombol toggle dark mode dengan latar belakang bulat */
+    #toggleDarkModeBtn {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 50%;
+      padding: 0.5rem;
+      transition: background-color 0.3s;
+    }
+    #toggleDarkModeBtn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    /* Gaya untuk ikon toggle (ukuran 24px) */
+    .toggle-icon {
+      width: 24px;
+      height: 24px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    /* Deskripsi */
     .description {
       text-align: center;
       color: #1a365d;
-      margin-top: 70px; /* agar tidak tertutup header */
+      margin-top: 70px;
       margin-bottom: 1rem;
       font-weight: 300;
     }
-    /* Tombol utama untuk membuka modal komentar */
+    /* Tombol utama untuk modal komentar */
     #openModalBtn {
       display: block;
       margin: 1rem auto 2rem;
       padding: 0.75rem 2rem;
-      background-color: #4299e1;
+      background-color: var(--color-primary);
       color: white;
       border: none;
       border-radius: 8px;
       font-size: 1rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.2s;
     }
     #openModalBtn:hover {
-      background-color: #3182ce;
+      background-color: var(--color-primary-hover);
+      transform: translateY(-2px);
     }
-    /* Modal Popup untuk komentar utama */
+    /* Modal Popup untuk Komentar */
     .modal {
       display: none;
       position: fixed;
@@ -95,12 +138,13 @@
       z-index: 1000;
     }
     .modal-content {
-      background-color: white;
+      background-color: var(--color-header-light);
       padding: 2rem;
       border-radius: 12px;
       width: 90%;
       max-width: 500px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px var(--color-shadow-light);
+      transition: transform 0.3s;
     }
     .close-modal {
       float: right;
@@ -124,7 +168,7 @@
     #submitModalComment {
       width: 100%;
       padding: 0.75rem;
-      background-color: #4299e1;
+      background-color: var(--color-primary);
       color: white;
       border: none;
       border-radius: 6px;
@@ -135,7 +179,7 @@
       transition: background-color 0.2s;
     }
     #submitModalComment:hover {
-      background-color: #3182ce;
+      background-color: var(--color-primary-hover);
     }
     /* Container Komentar */
     #commentsContainer {
@@ -143,11 +187,15 @@
       margin: 0 auto;
     }
     .comment {
-      background-color: white;
+      background-color: var(--color-header-light);
       padding: 1.5rem;
       border-radius: 12px;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 4px var(--color-shadow-light);
+      transition: transform 0.2s;
+    }
+    .comment:hover {
+      transform: translateY(-2px);
     }
     .comment.reply {
       margin-left: 2rem;
@@ -162,7 +210,6 @@
       color: #2d3748;
       margin-bottom: 1rem;
     }
-    /* Tombol Love & Toggle Reply */
     .love-btn,
     .toggle-reply-btn {
       background-color: transparent;
@@ -172,7 +219,7 @@
       margin-right: 0.5rem;
       cursor: pointer;
       font-size: 0.875rem;
-      transition: all 0.2s;
+      transition: background-color 0.2s, transform 0.2s;
     }
     .love-btn:hover {
       background-color: #fed7d7;
@@ -181,14 +228,14 @@
     .toggle-reply-btn:hover {
       background-color: #e2e8f0;
     }
-    /* Reply Form & Replies Container */
     .reply-form {
       margin-top: 1rem;
       padding: 1rem;
       background-color: #f8fafc;
       border-radius: 8px;
     }
-    .reply-form input {
+    .reply-form input,
+    .reply-form textarea {
       width: 100%;
       padding: 0.75rem;
       margin-bottom: 0.5rem;
@@ -197,16 +244,11 @@
       font-size: 1rem;
     }
     .reply-form textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
       resize: vertical;
       min-height: 80px;
     }
     .reply-form button {
-      background-color: #4299e1;
+      background-color: var(--color-primary);
       color: white;
       padding: 0.5rem 1rem;
       border: none;
@@ -216,11 +258,11 @@
       transition: background-color 0.2s;
     }
     .reply-form button:hover {
-      background-color: #3182ce;
+      background-color: var(--color-primary-hover);
     }
     .replies {
       margin-top: 1rem;
-      display: none; /* default disembunyikan */
+      display: none;
     }
     @media (max-width: 640px) {
       body {
@@ -233,7 +275,7 @@
         margin-left: 1rem;
       }
     }
-    /* Modal untuk Pesan (tombol di pojok kanan atas) */
+    /* Modal Pesan (Tombol “Tentang”) */
     .message-modal {
       display: none;
       position: fixed;
@@ -241,8 +283,8 @@
       right: 0;
       width: 300px;
       height: 100%;
-      background-color: #fff;
-      box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+      background-color: var(--color-header-light);
+      box-shadow: -2px 0 4px var(--color-shadow-light);
       z-index: 1200;
       padding: 1rem;
       overflow-y: auto;
@@ -258,67 +300,50 @@
       right: 0.5rem;
       font-size: 1.5rem;
       cursor: pointer;
-      color: #4299e1;
+      color: var(--color-primary);
     }
-    
-    /* ===== Dark Mode Styles ===== */
-    body.dark-mode {
-      background-color: #121212;
-      color: #e0e0e0;
-    }
-    body.dark-mode header {
-      background-color: #1e1e1e;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-    body.dark-mode header h1 {
-      color: #f5f7fa;
-    }
-    body.dark-mode header button {
-      color: #66b2ff;
-    }
+    /* Dark mode adjustments */
     body.dark-mode .modal-content {
       background-color: #333;
-      color: #e0e0e0;
+      color: var(--color-text-dark);
     }
     body.dark-mode .reply-form {
       background-color: #333;
     }
     body.dark-mode .message-modal {
-      background-color: #1e1e1e;
-      color: #e0e0e0;
+      background-color: var(--color-header-dark);
+      color: var(--color-text-dark);
     }
     body.dark-mode input,
     body.dark-mode textarea {
       background-color: #555;
-      color: #e0e0e0;
+      color: var(--color-text-dark);
       border-color: #777;
     }
     body.dark-mode .comment {
-      background-color: #1e1e1e;
-      color: #e0e0e0;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      background-color: var(--color-header-dark);
+      color: var(--color-text-dark);
+      box-shadow: 0 2px 4px var(--color-shadow-dark);
     }
     body.dark-mode .comment.reply {
       background-color: #2a2a2a;
     }
-    /* Perbaiki warna teks agar mudah dibaca */
     body.dark-mode .description {
-      color: #e0e0e0;
+      color: var(--color-text-dark);
     }
     body.dark-mode .comment-header {
       color: #b0b0b0;
     }
     body.dark-mode .comment-body {
-      color: #e0e0e0;
+      color: var(--color-text-dark);
     }
     body.dark-mode a {
       color: #66b2ff;
     }
-    /* Tambahan: Perbaiki warna tombol "love" dan "balas" agar terlihat di mode gelap */
     body.dark-mode .love-btn,
     body.dark-mode .toggle-reply-btn {
       border-color: #777;
-      color: #e0e0e0;
+      color: var(--color-text-dark);
     }
     body.dark-mode .love-btn:hover {
       background-color: #fc8181;
@@ -334,12 +359,14 @@
     <h1>KELUH KESAH</h1>
     <div class="header-controls">
       <button id="openMessageBtn" aria-label="Tentang">Tentang</button>
-      <!-- Tombol toggle dark mode menggunakan ikon -->
-      <button id="toggleDarkModeBtn" aria-label="Mode Gelap">🌙</button>
+      <!-- Tombol toggle dark mode -->
+      <button id="toggleDarkModeBtn" aria-label="Mode Gelap">
+        <!-- Awalnya mode terang, sehingga tampilkan ikon bulan -->
+      </button>
     </div>
   </header>
 
-  <!-- Deskripsi (opsional) -->
+  <!-- Deskripsi -->
   <p class="description">
     Silahkan berkeluh kesah disini.
   </p>
@@ -351,8 +378,8 @@
   <div id="commentModal" class="modal">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
-      <input type="text" id="modalDari" placeholder="Dari (anonim jika tak diisi)">
-      <input type="text" id="modalUntuk" placeholder="Untuk (adinugz jika tak diisi)">
+      <input type="text" id="modalDari" placeholder="Dari (anonim jika tak diisi)" />
+      <input type="text" id="modalUntuk" placeholder="Untuk (adinugz jika tak diisi)" />
       <textarea id="modalCommentText" rows="3" placeholder="Tulis Pesan Kamu..."></textarea>
       <button id="submitModalComment">Kirim Komentar</button>
     </div>
@@ -362,8 +389,7 @@
   <div id="messageModal" class="message-modal">
     <span class="close-message-modal">&times;</span>
     <a href="https://www.instagram.com/adinugz" target="_blank">@adinugz</a>
-    <!-- Di sini Anda bisa menambahkan konten pesan yang diinginkan -->
-    <p>Tempat bagi siapa saja untuk mencurahkan isi hati dan berbagi pengalaman. Dibuat karena gabut dan fomo AI dengan tujuan untuk mengurangi angka stress para gen z karena tekanannya yang dibuat sendiri.. hehe..</p>
+    <p>Tempat bagi siapa saja untuk mencurahkan isi hati dan berbagi pengalaman. Dibuat karena gabut dan fomo AI dengan tujuan untuk mengurangi angka stress para gen Z karena tekanan yang dibuat sendiri.. hehe..</p>
   </div>
 
   <!-- Container untuk menampilkan komentar dan reply -->
@@ -383,21 +409,53 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    /***** Global Object untuk Status Container Reply *****/
-    let replyOpenState = {};  // key: commentKey, value: boolean (true jika container reply terbuka)
+    /***** Variabel untuk Icon Toggle *****/
+    // Ikon matahari (sun) dari SVG standar
+    const sunIconHTML = `
+      <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>`;
+    // Ikon bulan (moon) dari SVG standar
+    const moonIconHTML = `
+      <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0012 21a9 9 0 009-8.21z"></path>
+      </svg>`;
+
+    /***** Dark Mode Toggle *****/
+    const toggleDarkModeBtn = document.getElementById('toggleDarkModeBtn');
+    // Set ikon awal: mode terang (tampilkan ikon bulan)
+    toggleDarkModeBtn.innerHTML = moonIconHTML;
+    toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
+
+    toggleDarkModeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        // Jika dark mode aktif, tampilkan ikon matahari
+        toggleDarkModeBtn.innerHTML = sunIconHTML;
+        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Terang');
+      } else {
+        // Jika mode terang, tampilkan ikon bulan
+        toggleDarkModeBtn.innerHTML = moonIconHTML;
+        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
+      }
+    });
 
     /***** Fungsi Utilitas *****/
     function getCurrentDateTime() {
       return new Date().toLocaleString();
     }
 
-    /***** Fungsi Membuat Elemen Komentar *****
-     * Parameter:
-     *   data: objek komentar (dari, untuk, text, dateTime, love, replies)
-     *   commentKey: key Firebase untuk komentar
-     *   isReply (opsional): jika true, elemen dianggap sebagai reply
-     *   parentKey (opsional): key Firebase dari komentar induk (jika ini reply)
-     */
+    /***** Fungsi Membuat Elemen Komentar *****/
     function createCommentElement(data, commentKey, isReply = false, parentKey = null) {
       const commentDiv = document.createElement('div');
       commentDiv.className = isReply ? 'comment reply' : 'comment';
@@ -429,7 +487,7 @@
       loveBtn.addEventListener('click', () => {
         const currentKey = commentDiv.getAttribute('data-key');
         if (localStorage.getItem('loved_' + currentKey)) {
-          alert("ojo mbok like maneh ta cok!!");
+          alert("Sudah pernah like, terima kasih.");
           return;
         }
         const parentKeyAttr = commentDiv.getAttribute('data-parent-key');
@@ -448,7 +506,7 @@
           });
       });
 
-      // Untuk komentar utama (bukan reply), tampilkan tombol toggle reply
+      // Untuk komentar utama, tampilkan tombol toggle reply
       if (!isReply) {
         const replyCount = data.replies ? Object.keys(data.replies).length : 0;
         const toggleReplyBtn = document.createElement('button');
@@ -482,11 +540,10 @@
       return commentDiv;
     }
 
-    /***** Fungsi Toggle Replies *****
-     * Menampilkan atau menyembunyikan container reply dan form reply.
-     * Form reply dilengkapi dengan input "Inisial (opsional)" dan textarea.
-     * Status container reply disimpan dalam variabel global replyOpenState.
-     */
+    /***** Global Object untuk Status Container Reply *****/
+    let replyOpenState = {};  // key: commentKey, value: boolean
+
+    /***** Fungsi Toggle Replies *****/
     function toggleReplies(parentDiv, parentKey, parentData) {
       const repliesContainer = parentDiv.querySelector('.replies');
       if (repliesContainer.style.display === 'none' || repliesContainer.style.display === '') {
@@ -524,7 +581,6 @@
             };
             database.ref(`comments/${parentKey}/replies`).push(replyData)
               .then(() => {
-                // Clear form reply, tetap biarkan container reply terbuka
                 replyInitialsInput.value = '';
                 replyTextarea.value = '';
               })
@@ -593,7 +649,7 @@
       snapshot.forEach(childSnapshot => {
         commentsArray.push(childSnapshot);
       });
-      // Urutkan agar komentar terbaru muncul di atas
+      // Urutkan komentar terbaru di atas
       commentsArray.reverse();
       commentsArray.forEach(childSnapshot => {
         const commentKey = childSnapshot.key;
@@ -601,21 +657,6 @@
         const commentElement = createCommentElement(commentData, commentKey);
         commentsContainer.appendChild(commentElement);
       });
-    });
-
-    /***** Dark Mode Toggle dengan Ikon *****/
-    const toggleDarkModeBtn = document.getElementById('toggleDarkModeBtn');
-    toggleDarkModeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      if (document.body.classList.contains('dark-mode')) {
-        // Tampilkan ikon matahari untuk opsi mode terang
-        toggleDarkModeBtn.innerHTML = '☀';
-        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Terang');
-      } else {
-        // Tampilkan ikon bulan untuk opsi mode gelap
-        toggleDarkModeBtn.innerHTML = '🌙';
-        toggleDarkModeBtn.setAttribute('aria-label', 'Mode Gelap');
-      }
     });
   </script>
 </body>
